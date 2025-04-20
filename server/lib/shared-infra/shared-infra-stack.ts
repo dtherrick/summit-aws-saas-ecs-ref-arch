@@ -140,7 +140,7 @@ export class SharedInfraStack extends cdk.Stack {
 
     const lambdaEcsSaaSLayers = new PythonLayerVersion(this, 'LambdaEcsSaaSLayers', {
       entry: path.join(__dirname, './layers'),
-      compatibleRuntimes: [Runtime.PYTHON_3_10]
+      compatibleRuntimes: [Runtime.PYTHON_3_12]
     });
 
     const basicKey = new TenantApiKey(this, 'BasicTierApiKey', {

@@ -4,10 +4,15 @@
 sudo yum update -y
 sudo yum install -y nodejs
 sudo yum install -y jq
-sudo yum install -y python3-pip
-sudo yum install -y npm
+
+# Install Python 3.12
+sudo yum install -y gcc openssl-devel bzip2-devel libffi-devel
+sudo amazon-linux-extras enable python3.12
+sudo yum install -y python3.12
+sudo alternatives --set python3 /usr/bin/python3.12
+sudo python3 -m pip install --upgrade pip setuptools wheel
+
 sudo npm install -g aws-cdk
-sudo python3 -m pip install --upgrade --ignore-installed setuptools
 
 # Enable nocasematch option
 shopt -s nocasematch

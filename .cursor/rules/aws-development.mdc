@@ -1,0 +1,78 @@
+---
+description: Development for Amazon Web Services (AWS) infrastructure and functionality.
+globs: 
+alwaysApply: false
+---
+# AWS SaaS Architecture Guidelines
+
+The following rules should guide your development with AWS.
+
+When using this rule, also check the MCP Server `awslabs.core-mcp-server` for guidance on the query. Any time there is disagreement between the rule and the MCP answer, please do the following:
+1. The MCP answer takes precedence over the rule.
+2. Note the discrepancy and ask me to update the rule with the new guidance.
+
+These are the basic rules to follow:
+
+1. **Multi-Tenant Structure**
+   - Implement strict separation between Control Plane (management) and Application Plane (core services)
+   - Use AWS Resource Tags for tenant isolation (e.g., `tenant-id: <uuid>`)
+   - Choose isolation strategy per service (Silo/Pool/Bridge model)
+
+2. **Security Requirements**
+   - IAM Roles with least privilege (SCIM integration for SaaS providers)
+   - AWS Cognito with multi-tenant aware user pools
+   - Encrypt all data at rest (KMS CMKs) and in transit (TLS 1.2+)
+
+3. **AWS Service Implementation**
+   - **DynamoDB**: Use tenantID partition keys + GSIs for cross-tenant queries
+   - **Lambda**: 
+     - Use environment variables for tenant context
+     - Implement cold-start mitigation (provisioned concurrency)
+   - **API Gateway**:
+     - Custom authorizers for JWT validation
+     - Enable caching for frequent tenant requests
+   - **Bedrock**:
+     - Separate model access policies per tenant tier
+     - Implement usage metering via CloudWatch
+
+4. **Operational Excellence**
+   - Implement CI/CD pipeline with Amplify Hosting
+   - Use CloudFormation/SAM/CDK for infrastructure-as-code
+   - Enable CloudTrail logging for all management events
+
+## Infrastructure Requirements
+
+Infrastructure as Code must use AWS CDK with TypeScript and follow these standards:
+
+### CDK Implementation:
+
+- Use `aws-cdk-lib` with explicit `aws_*` prefixes
+- Implement custom constructs for reusable patterns
+- Separate concerns into distinct CloudFormation stacks
+- Organize resources by functional groups: storage, compute, authentication, API, access
+
+### Resource Configuration:
+
+Follow AWS Well-Architected Framework principles.
+
+- Lambda: TypeScript implementation on ARM64 architecture
+- Authentication: Cognito with OAuth2 and OIDC support
+- API: API Gateway with Cognito/IAM authentication
+- GraphQL: AppSync with function resolvers, avoid VTL templates
+- Workflow: Step Functions for orchestration
+- Security: Custom KMS keys and encryption-at-rest
+- Observability: Comprehensive logging, metrics, and tracing
+
+### Data Management Standards
+
+- Use DynamoDB as primary data store
+- Use expression attributes for reserved words
+- Implement pagination with nextToken
+- Define explicit partition/sort key strategies
+
+### API Standards:
+
+- Use GraphQL through AppSync
+- Use function resolvers exclusively
+- Maintain consistent error handling
+- Document all schema changes

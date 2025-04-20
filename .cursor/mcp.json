@@ -1,0 +1,121 @@
+{
+    "mcpServers": {
+      "awslabs.core-mcp-server": {
+        "command": "wsl",
+        "args": [
+          "bash",
+          "-c",
+          "'/home/damian/.local/bin/uvx awslabs.core-mcp-server'"
+        ],
+        "env": {
+          "FASTMCP_LOG_LEVEL": "ERROR"
+        },
+        "autoApprove": [],
+        "disabled": false
+      },
+      "awslabs.aws-diagram-mcp-server": {
+        "command": "wsl",
+        "args": [
+          "bash",
+          "-c",
+          "'/home/damian/.local/bin/uvx awslabs.aws-diagram-mcp-server'"
+        ],
+        "env": {
+          "FASTMCP_LOG_LEVEL": "ERROR"
+        },
+        "autoApprove": [],
+        "disabled": false
+      },
+      "awslabs.aws-documentation-mcp-server": {
+        "command": "wsl",
+        "args": [
+          "bash",
+          "-c",
+          "'/home/damian/.local/bin/uvx awslabs.aws-documentation-mcp-server'"
+        ],
+        "env": {
+          "FASTMCP_LOG_LEVEL": "ERROR"
+        },
+        "autoApprove": [],
+        "disabled": false
+      },
+      "awslabs.bedrock-kb-retrieval-mcp-server": {
+        "command": "wsl",
+        "args": [
+          "bash",
+          "-c",
+          "'/home/damian/.local/bin/uvx awslabs.bedrock-kb-retrieval-mcp-server'"
+        ],
+        "env": {
+          "FASTMCP_LOG_LEVEL": "ERROR"
+        },
+        "autoApprove": [],
+        "disabled": false
+      },
+      "awslabs.cdk-mcp-server": {
+        "command": "wsl",
+        "args": [
+          "bash",
+          "-c",
+          "'/home/damian/.local/bin/uvx awslabs.cdk-mcp-server'"
+        ],
+        "env": {
+          "FASTMCP_LOG_LEVEL": "ERROR"
+        },
+        "autoApprove": [],
+        "disabled": false
+      },
+      "awslabs.cost-analysis-mcp-server": {
+        "command": "wsl",
+        "args": [
+          "bash",
+          "-c",
+          "'/home/damian/.local/bin/uvx awslabs.cost-analysis-mcp-server'"
+        ],
+        "env": {
+          "FASTMCP_LOG_LEVEL": "ERROR"
+        },
+        "autoApprove": [],
+        "disabled": false
+      },
+      "awslabs.lambda-mcp-server": {
+        "command": "wsl",
+        "args": [
+          "bash",
+          "-c",
+          "'/home/damian/.local/bin/uvx awslabs.lambda-mcp-server'"
+        ],
+        "env": {
+          "FASTMCP_LOG_LEVEL": "ERROR"
+        },
+        "autoApprove": [],
+        "disabled": false
+      },
+      "awslabs.nova-canvas-mcp-server": {
+        "command": "wsl",
+        "args": [
+          "bash",
+          "-c",
+          "'/home/damian/.local/bin/uvx awslabs.nova-canvas-mcp-server'"
+        ],
+        "env": {
+          "FASTMCP_LOG_LEVEL": "ERROR"
+        },
+        "autoApprove": [],
+        "disabled": false
+      },
+      "awslabs.terraform-mcp-server": {
+        "command": "wsl",
+        "args": [
+          "bash",
+          "-c",
+          "'/home/damian/.local/bin/uvx awslabs.terraform-mcp-server'"
+        ],
+        "env": {
+          "FASTMCP_LOG_LEVEL": "ERROR"
+        },
+        "autoApprove": [],
+        "disabled": false
+      }
+    }
+  }

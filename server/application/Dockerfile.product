@@ -1,4 +1,4 @@
-FROM public.ecr.aws/bitnami/node:20 AS build
+FROM --platform=linux/amd64 public.ecr.aws/bitnami/node:20 AS build
 WORKDIR /app
 COPY package.json ./
 # COPY yarn.lock ./
@@ -6,7 +6,7 @@ RUN yarn
 COPY . .
 RUN yarn build product
 
-FROM public.ecr.aws/bitnami/node:20
+FROM --platform=linux/amd64 public.ecr.aws/bitnami/node:20
 WORKDIR /app
 COPY --from=build /app ./
 

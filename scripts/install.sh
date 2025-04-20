@@ -1,5 +1,19 @@
 #!/bin/bash -e
 
+# Ensure AWS Profile is set
+if [[ -z "${AWS_PROFILE}" ]]; then
+    echo "AWS_PROFILE is not set. Please set it first:"
+    echo "export AWS_PROFILE=825765427811"
+    exit 1
+fi
+
+# Validate AWS credentials
+if ! aws sts get-caller-identity &>/dev/null; then
+    echo "AWS credentials are not valid. Please run:"
+    echo "aws sso login --profile ${AWS_PROFILE}"
+    exit 1
+fi
+
 export CDK_PARAM_SYSTEM_ADMIN_EMAIL="$1"
 
 if [[ -z "$CDK_PARAM_SYSTEM_ADMIN_EMAIL" ]]; then
@@ -58,7 +72,39 @@ export CDK_BASIC_CLUSTER="$CDK_PARAM_STAGE-$CDK_PARAM_TIER"
 export CDK_USE_DB=$DB_TYPE
 
 npm install
-npx cdk bootstrap
+echo "bootstrapping CDK..."
+
+# Ensure jq is installed
+if ! command -v jq &> /dev/null
+then
+    echo "jq could not be found. Please install jq (e.g., sudo apt-get install jq or brew install jq)"
+    exit 1
+fi
+
+# Fetch temporary credentials (which are in JSON format) using the current AWS_PROFILE
+echo "Fetching temporary credentials for profile: $AWS_PROFILE..."
+CREDENTIALS=$(aws configure export-credentials --profile $AWS_PROFILE)
+
+# Parse JSON and export credentials
+export AWS_ACCESS_KEY_ID=$(echo "$CREDENTIALS" | jq -r .AccessKeyId)
+export AWS_SECRET_ACCESS_KEY=$(echo "$CREDENTIALS" | jq -r .SecretAccessKey)
+export AWS_SESSION_TOKEN=$(echo "$CREDENTIALS" | jq -r .SessionToken)
+
+# Optional: Add echo statements here if needed to verify variables are set
+echo "AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID"
+echo "AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY"
+echo "AWS_SESSION_TOKEN: $AWS_SESSION_TOKEN"
+
+if [[ -z "$AWS_ACCESS_KEY_ID" || -z "$AWS_SECRET_ACCESS_KEY" || -z "$AWS_SESSION_TOKEN" || "$AWS_ACCESS_KEY_ID" == "null" ]]; then
+  echo "Failed to retrieve or parse temporary credentials. Ensure you are logged in via SSO (aws sso login --profile $AWS_PROFILE) and jq is installed."
+  exit 1
+fi
+
+# Bootstrap using explicit account/region/profile, calling cdk directly
+cdk bootstrap aws://$ACCOUNT_ID/$REGION --profile $AWS_PROFILE
+
+# Unset credentials after use (optional, good practice)
+unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
 
 SERVICES=$(aws ecs list-services --cluster $CDK_BASIC_CLUSTER --query 'serviceArns[*]' --output text || true)
 for SERVICE in $SERVICES; do
@@ -71,7 +117,11 @@ for SERVICE in $SERVICES; do
         --no-cli-pager --query 'service.serviceArn' --output text
 done
 
-npx cdk deploy --all --require-approval=never
+npx cdk deploy \
+    --all \
+    --require-approval=never \
+    --context account=$ACCOUNT_ID \
+    --context region=$REGION
 
 # Get SaaS application url
 ADMIN_SITE_URL=$(aws cloudformation describe-stacks --stack-name shared-infra-stack --query "Stacks[0].Outputs[?OutputKey=='adminSiteUrl'].OutputValue" --output text)

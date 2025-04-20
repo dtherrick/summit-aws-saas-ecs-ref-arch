@@ -197,7 +197,7 @@ export class RdsCluster extends Construct {
       entry: path.join(__dirname, './mysql-database'),
       handler: 'lambda_handler',
       index: 'mysql_database.py',
-      runtime: lambda.Runtime.PYTHON_3_10,
+      runtime: lambda.Runtime.PYTHON_3_12,
       tracing: lambda.Tracing.ACTIVE,
       layers: [props.lambdaEcsSaaSLayers],
       environment: {

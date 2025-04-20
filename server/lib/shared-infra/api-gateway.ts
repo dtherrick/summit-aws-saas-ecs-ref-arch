@@ -1,4 +1,3 @@
-
 import * as lambda_python from '@aws-cdk/aws-lambda-python-alpha';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { type CustomApiKey } from '../interfaces/custom-api-key';
@@ -40,7 +39,7 @@ export class ApiGateway extends Construct {
       entry: path.join(__dirname, './Resources'),
       handler: 'lambda_handler',
       index: 'tenant_authorizer.py',
-      runtime: lambda.Runtime.PYTHON_3_10,
+      runtime: lambda.Runtime.PYTHON_3_12,
       tracing: lambda.Tracing.ACTIVE,
       layers: [props.lambdaEcsSaaSLayers],
       // role setting

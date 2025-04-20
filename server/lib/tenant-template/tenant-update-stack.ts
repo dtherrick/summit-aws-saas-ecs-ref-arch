@@ -116,8 +116,8 @@ export class TenantUpdatePipeline extends cdk.Stack {
         phases: {
           install: {
             'runtime-versions': {
-              python: 3.11,
-              nodejs: 18
+              python: 3.12,
+              nodejs: 20
             }
           },
           build: {

@@ -1,0 +1,34 @@
+[project]
+name = "summit-aws-saas-ecs-ref-arch"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13.1"
+dependencies = []
+
+[dependency-groups]
+lint = [
+    "ruff>=0.11.6",
+]
+mcp = [
+    "awslabs-aws-diagram-mcp-server",
+    "awslabs-aws-documentation-mcp-server",
+    "awslabs-bedrock-kb-retrieval-mcp-server",
+    "awslabs-cdk-mcp-server",
+    "awslabs-core-mcp-server",
+    "awslabs-cost-analysis-mcp-server",
+    "awslabs-lambda-mcp-server",
+    "awslabs-nova-canvas-mcp-server",
+    "awslabs-terraform-mcp-server",
+]
+
+[tool.uv.sources]
+awslabs-aws-diagram-mcp-server = { path = "../aws_projects/mcp/src/aws-diagram-mcp-server" }
+awslabs-aws-documentation-mcp-server = { path = "../aws_projects/mcp/src/aws-documentation-mcp-server" }
+awslabs-bedrock-kb-retrieval-mcp-server = { path = "../aws_projects/mcp/src/bedrock-kb-retrieval-mcp-server" }
+awslabs-cdk-mcp-server = { path = "../aws_projects/mcp/src/cdk-mcp-server" }
+awslabs-core-mcp-server = { path = "../aws_projects/mcp/src/core-mcp-server" }
+awslabs-cost-analysis-mcp-server = { path = "../aws_projects/mcp/src/cost-analysis-mcp-server" }
+awslabs-lambda-mcp-server = { path = "../aws_projects/mcp/src/lambda-mcp-server" }
+awslabs-nova-canvas-mcp-server = { path = "../aws_projects/mcp/src/nova-canvas-mcp-server" }
+awslabs-terraform-mcp-server = { path = "../aws_projects/mcp/src/terraform-mcp-server" }

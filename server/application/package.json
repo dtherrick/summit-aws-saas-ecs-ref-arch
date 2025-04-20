@@ -6,7 +6,7 @@
   "private": true,
   "license": "MIT-0",
   "engines": {
-    "node": ">=14.18 || >= 16.13"
+    "node": ">=20.0.0"
   },
   "scripts": {
     "prebuild": "rimraf dist",

@@ -1,15 +1,29 @@
 #!/bin/bash
+set -e
+
 # build and push application services into ECR
+
+# Check Docker installation and platform support
+check_docker() {
+    if ! command -v docker &> /dev/null; then
+        echo "Docker is not installed. Please install Docker first."
+        exit 1
+    fi
+    
+    # Check if Docker daemon is running
+    if ! docker info &> /dev/null; then
+        echo "Docker daemon is not running. Please start Docker."
+        exit 1
+    fi
+}
 
 # Download the official certificate for AWS RDS
 download_RDS_ssl() {
     local SSL_CERT_PATH="../server/application/microservices/product_mysql/src/SSLCA.pem"
     echo -e "Downloading Amazon Root CA 1 certificate..."
 
-    # 디렉토리 생성
     mkdir -p $(dirname "$SSL_CERT_PATH")
 
-    # Amazon Root CA 1 인증서 다운로드
     curl -s -o "$SSL_CERT_PATH" https://www.amazontrust.com/repository/AmazonRootCA1.pem
 
     if [ $? -eq 0 ]; then
@@ -20,7 +34,6 @@ download_RDS_ssl() {
         exit 1
     fi
 }
-
 
 # Prompt user for DB_TYPE selection
 select_db_type () {
@@ -45,20 +58,35 @@ select_db_type () {
     echo "Selected DB_TYPE: $DB_TYPE"
 }
 
+# Check AWS CLI configuration
+check_aws_config() {
+    if ! aws sts get-caller-identity &> /dev/null; then
+        echo "AWS CLI is not configured properly. Please configure AWS CLI with valid credentials."
+        exit 1
+    fi
+}
+
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
 SERVICE_REPOS=("user" "product" "order" "rproxy")
-# SERVICE_REPOS=("product")
-# RPROXY_VERSIONS=("v1" "v2")
+
+# Run initial checks
+check_docker
+check_aws_config
 
 REGION=$(aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]')
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
 REGISTRY="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
-aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin $REGISTRY
+
+# Login to ECR
+echo "Logging into ECR..."
+if ! aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin $REGISTRY; then
+    echo "Failed to login to ECR. Please check your AWS credentials and permissions."
+    exit 1
+fi
 
 deploy_service () {
-
     local SERVICE_NAME="$1"
     local VERSION="$2"
 
@@ -69,12 +97,11 @@ deploy_service () {
 
     local SERVICEECR="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/$SERVICE_NAME"
 
-    # Dabase handling for 'product' service  
+    # Database handling for 'product' service  
     if [ "$SERVICE_NAME" == "product" ]; then
       echo "➤➤➤ Database App handling for $SERVICE_NAME"
 
-      # Check environment variable or configuration to determine if MySQL or DynamoDB is used
-      DB_TYPE=${DB_TYPE:-"dynamodb"}  # default to mysql if not set
+      DB_TYPE=${DB_TYPE:-"dynamodb"}  # default to dynamodb if not set
 
       if [ "$DB_TYPE" == "mysql" ]; then
         echo "Building $SERVICE_NAME service for MySQL"
@@ -87,12 +114,24 @@ deploy_service () {
         exit 1
       fi
     fi
-    # Docker Image Build for other services
-    docker build -t $SERVICEECR -f Dockerfile.$SERVICE_NAME .
-    # Docker Image Tag
-    docker tag "$SERVICEECR" "$SERVICEECR:$VERSION"
-    # Docker Image Push to ECR
-    docker push "$SERVICEECR:$VERSION"
+
+    echo "Building Docker image for $SERVICE_NAME..."
+    if ! docker build -t $SERVICEECR -f Dockerfile.$SERVICE_NAME .; then
+        echo "Failed to build Docker image for $SERVICE_NAME"
+        exit 1
+    fi
+
+    echo "Tagging Docker image for $SERVICE_NAME..."
+    if ! docker tag "$SERVICEECR" "$SERVICEECR:$VERSION"; then
+        echo "Failed to tag Docker image for $SERVICE_NAME"
+        exit 1
+    fi
+
+    echo "Pushing Docker image for $SERVICE_NAME to ECR..."
+    if ! docker push "$SERVICEECR:$VERSION"; then
+        echo "Failed to push Docker image for $SERVICE_NAME to ECR"
+        exit 1
+    fi
 
     echo '************************' 
     echo "AWS_REGION:" $REGION
@@ -108,13 +147,16 @@ cd ../server/application
 
 for SERVICE in "${SERVICE_REPOS[@]}"; do
   echo -e "\033[0;33m==========\033[0;32m Repository [$SERVICE] checking... \033[0;33m==========\033[0m"
-  REPO_EXISTS=$(aws ecr describe-repositories --repository-names "$SERVICE" --query 'repositories[0].repositoryUri' --output text)
+  REPO_EXISTS=$(aws ecr describe-repositories --repository-names "$SERVICE" --query 'repositories[0].repositoryUri' --output text 2>/dev/null || echo "")
 
   if [ "$REPO_EXISTS" == "${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/$SERVICE" ]; then
     echo "Repository [$SERVICE] already exists."
   else
     echo "Repository [$SERVICE] does not exist, creating it..."
-    aws ecr create-repository --repository-name "$SERVICE" | cat 
+    if ! aws ecr create-repository --repository-name "$SERVICE"; then
+        echo "Failed to create ECR repository for $SERVICE"
+        exit 1
+    fi
     echo "Repository [$SERVICE] created."
   fi
 
